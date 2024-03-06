@@ -8,6 +8,9 @@ import ChatLabelai from "./ChatLabelai.vue";
 import ChatLabeluser from "./ChatLabeluser.vue";
 import { useChatStore } from "../chatStore";
 import clipboard from "@/utils/clipboardUtils";
+import {ChatListStore} from "@/views/demos/chat/chatlistStore";
+import type {ChatMessage, Message, User} from "@/views/demos/chat/chatTypes";
+import * as ai00Type from "@/ai00sdk/ai00Type";
 const ChatStore = useChatStore();
 const props = defineProps({
   // Message to display
@@ -43,6 +46,119 @@ const copyText = (event: Event) => {
 function deleteMessage(id: string) {
   ChatStore.deleteMessage(id);
 }
+const chatStore = useChatStore();
+const ChatList = ChatListStore();
+const aiMessage = ref("");
+
+const createMessage = (user: User, text: string) => {
+  const message: Message = {
+    id: "_" + Math.random().toString(36).substring(2, 11),
+    user: user,
+    text: text,
+    timestamp: new Date().getTime(),
+  };
+  return message;
+};
+const sendMessage = () => {
+  // 判断是否为空
+
+  if (chatStore.isChatting) {
+    return;
+  }
+  // 发送User Message
+  chatStore.removeOtherMessage(
+    props.message.timestamp
+  );
+
+  // 请求AI回答
+  console.log(chatStore.getLatestMessage().text);
+  sendChatMessage(chatStore.getLatestMessage().text);
+};
+const sendChatMessage = async (content: string) => {
+  try {
+    chatStore.setChatting(true);
+    const messlist = chatStore.chatHistory.history;
+    const contlist: any[] = [
+      {
+        role: "user",
+        content: "Hi!",
+      },
+    ];
+
+    // const contlist =
+
+    for (let index = 0; index < messlist.length - 1; index++) {
+      const element = messlist[index];
+      let chatm: ChatMessage = {
+        role: element.user.id == 1 ? "user" : "assistant",
+        content: element.text,
+      };
+      contlist.push(chatm);
+    }
+
+    /*定义要传送给    window.Ai00Api.oai_chat_completions  的 body参数 ，
+  结构为 ai00Type.OaiChatCompletionsType
+  */
+    if (chatStore.SamplerType == "Nucleus") {
+      const body: ai00Type.OaiChatCompletionsType = {
+        messages: contlist,
+        max_tokens: chatStore.Max_Tokens,
+        temperature: chatStore.Temperature,
+        top_p: chatStore.TOP_P,
+        presence_penalty: chatStore.Presence,
+        frequency_penalty: chatStore.Frequency,
+        penalty_decay: Math.exp(-0.69314718055994 / Number(chatStore.Penalty)),
+        stop: [
+          "\n" + chatStore.chatHistory.me.name + ":",
+          chatStore.chatHistory.me.name + ":",
+        ],
+        stream: true,
+        names: {
+          user: chatStore.chatHistory.me.name,
+          assistant: chatStore.chatHistory.ai.name,
+        },
+      };
+      window.Ai00Api.oai_chat_completions(body, async (res: string) => {
+        chatStore.changeLatestMessage(res);
+      });
+    } else if (chatStore.SamplerType == "Mirostat") {
+      const body: ai00Type.OaiChatCompletionsType = {
+        messages: contlist,
+        max_tokens: chatStore.Max_Tokens,
+        tau: chatStore.tau,
+        rate:chatStore.rate,
+        stop: [
+          "\n" + chatStore.chatHistory.me.name + ":",
+          chatStore.chatHistory.me.name + ":",
+        ],
+        stream: true,
+        names: {
+          user: chatStore.chatHistory.me.name,
+          assistant: chatStore.chatHistory.ai.name,
+        },
+      };
+      window.Ai00Api.oai_chat_completions(body, async (res: string) => {
+        chatStore.changeLatestMessage(res);
+      });
+
+      // 调用 window.Ai00Api.oai_chat_completions 函数，传入参数：
+      // body 参数数据结构是 /ai00sdk/ai00Type.ts 中定义 的 ai00Type.OaiChatCompletionsType
+      // console.log("111")
+    }
+
+    // 调用 window.Ai00Api.oai_chat_completions 函数，传入参数：
+    // body 参数数据结构是 /ai00sdk/ai00Type.ts 中定义 的 ai00Type.OaiChatCompletionsType
+    // console.log("111")
+    window.Ai00Api.oai_chat_completions(body, async (res: string) => {
+      chatStore.changeLatestMessage(res);
+    });
+  } catch (error: any) {
+    chatStore.setChatting(false);
+  } finally {
+    chatStore.setChatting(false);
+  }
+};
+
 </script>
 
 <template>
@@ -78,7 +194,7 @@ function deleteMessage(id: string) {
       <v-card-actions class="card-actions">
         <div class="close" v-if="!isUserMessage">
           <v-btn
-            @click=""
+            @click="sendMessage"
             density="compact"
             icon="mdi-reload"
             size="small"

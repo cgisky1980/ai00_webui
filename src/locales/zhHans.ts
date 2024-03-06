@@ -82,6 +82,8 @@ export default {
   write: {
      settings: "参数设置",
      write: "续写",
+     screenshot: "截图",
+     clear: "清空",
      title: "论文标题",
      step1: "生成提纲",
      step2: "生成论文",
@@ -90,7 +92,7 @@ export default {
      prompt2: "论文提纲标准格式：I.引言。II. 正文。III. 结论。正文又细分为若干具体的小节，用罗马数字分段。",
      prompt3: "根据论文主题对下列段落进行详细的撰写，完成一篇高度凝练且全面的论文，论文的题目是：",
      prompt4: "段落标题",
- 
+
 
   },
 

@@ -90,7 +90,7 @@ export const useChatStore = defineStore({
       this.chatHistory.history= his.history;
       this.chatHistory.ai =his.ai;
       this.chatHistory.me = his.me;
- 
+
       },
     setnowchat(nowchatid: string) {
       this.nowchat = nowchatid;
@@ -108,6 +108,21 @@ export const useChatStore = defineStore({
     removeLatestMessage() {
       this.chatHistory.history.pop();
     },
+    removeOtherMessage(timestamp: number) {
+      const history = this.chatHistory.history;
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].timestamp >= timestamp) {
+          history.splice(i, 1);
+        } else {
+          // 由于历史记录是按时间排序的，
+          // 一旦遇到不满足条件的记录就可以停止循环
+          break;
+        }
+      }
+      console.log(history);
+    },
+
+
     changeLatestMessage(msg: string) {
       let newmsg = this.chatHistory.history[this.chatHistory.history.length - 1];
 
@@ -120,7 +135,7 @@ export const useChatStore = defineStore({
       return this.chatHistory.history[this.chatHistory.history.length - 1];
     },
     deleteMessage(id: string) {
- 
+
       let msg = this.chatHistory.history.find((item) => item.id === id);
       //获取 msg的 index
       let index = this.chatHistory.history.indexOf(msg);

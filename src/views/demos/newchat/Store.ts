@@ -5,7 +5,7 @@ import { defineStore } from "pinia";
 export const useTodoStore = defineStore({
   id: "todo",
   state: () => ({
- 
+    text:"# Hello Editor",
     apiKey: "",
     chatHistory: [],
     apiKeyDialog: false,
@@ -25,7 +25,7 @@ export const useTodoStore = defineStore({
     Model:"",
     AIimg:"",
     SamplerType:"Nucleus",
-    
+
   }),
 
   // persist: {

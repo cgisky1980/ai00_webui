@@ -5,14 +5,13 @@
 -->
 <script setup lang="ts">
 import { useTodoStore } from "../Store";
-import { MdEditor } from 'md-editor-v3';
+import {MdEditor, ToolbarNames} from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import * as ai00Type from "@/ai00sdk/ai00Type";
 import  Copy  from "./Copy.vue";
 
 const todoStore = useTodoStore();
-const text = ref('# Hello Editor');
- 
+
 const toolbar = ref([
   'bold',
   'underline',
@@ -37,11 +36,11 @@ const toolbar = ref([
 
 
 const sendPrompt = async () => {
- 
-const prompt = text.value
-const temp :string = text.value
+
+const prompt = todoStore.text
+const temp :string = todoStore.text
 if(todoStore.SamplerType == 'Nucleus'){
- 
+
 
   const body: ai00Type.OaiCompletionsType = {
     prompt: [prompt],
@@ -55,8 +54,8 @@ if(todoStore.SamplerType == 'Nucleus'){
     stream: true,
   }
   window.Ai00Api.oai_completions(body, async (res: string) => {
-    text.value = temp + res
-    
+    todoStore.text = temp + res
+
   })
 }else if(todoStore.SamplerType == 'Mirostat'){
   const body: ai00Type.OaiCompletionsType = {
@@ -68,13 +67,13 @@ if(todoStore.SamplerType == 'Nucleus'){
     stream: true,
   }
   window.Ai00Api.oai_completions(body, async (res: string) => {
-    text.value = temp + res
-    
+    todoStore.text = temp + res
+
   })
 
 }
 
- 
+
 
   // 调用 window.Ai00Api.oai_chat_completions 函数，传入参数：
   // body 参数数据结构是 /ai00sdk/ai00Type.ts 中定义 的 ai00Type.OaiChatCompletionsType
@@ -103,29 +102,29 @@ if (element) {
   <v-card height="100%"
   prepend-icon="mdi-file-document-edit">
     <template v-slot:title>
-      {{ $t("write.write") }} 
+      {{ $t("write.write") }}
       <v-spacer></v-spacer>
- 
-        <v-btn  color="primary" @click="sendPrompt">        {{ $t("write.write") }} </v-btn>
- 
-        <v-btn  color="primary" @click="text=''" style="margin-left: 30px;">清空</v-btn>
 
-        <v-btn  color="primary" @click="goClipboard" style="margin-left: 30px;">截图</v-btn>
+        <v-btn  color="primary" @click="sendPrompt">        {{ $t("write.write") }} </v-btn>
+
+        <v-btn  color="primary" @click="todoStore.text=''" style="margin-left: 30px;">{{ $t("write.clear") }}</v-btn>
+
+        <v-btn  color="primary" @click="goClipboard" style="margin-left: 30px;">{{ $t("write.screenshot") }}</v-btn>
       </template>
       <v-card-text  >
-      <MdEditor v-model="text" 
+      <MdEditor v-model="todoStore.text"
       :toolbars="toolbar"
       class="editor"
       :preview = false
-      
+
       />
       <div class="hidejietu" id="po">
- 
-          <Copy  :text="text+'\n\n'" />
+
+          <Copy  :text="todoStore.text+'\n\n'" />
           <p style="margin-top: 20px;">✅ Powered by AI00 for RWKV ( https://github.com/cgisky1980/ai00_rwkv_server ) </p>
       </div>
       </v-card-text>
- 
+
   </v-card>
 
 </template>
